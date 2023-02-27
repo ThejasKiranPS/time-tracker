@@ -1,3 +1,6 @@
+use time_tracker::{log_end, log_start};
+
 fn main() {
-    println!("Hello, world!");
+    log_start();
+    log_end();
 }
