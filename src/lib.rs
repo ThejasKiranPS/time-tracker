@@ -1,6 +1,9 @@
 use chrono::{Duration, Local, NaiveDateTime};
+use dirs::data_local_dir;
 use rev_lines::RevLines;
+use std::fs::create_dir;
 use std::io::BufReader;
+use std::path::PathBuf;
 use std::{
     fs::{File, OpenOptions},
     io::Write,
@@ -8,10 +11,19 @@ use std::{
 };
 const TIME_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 pub struct Config {
-    pub path: String,
+    pub data_file_path: PathBuf,
 }
 
-impl Config {}
+impl Default for Config {
+    fn default() -> Self {
+        let mut path = PathBuf::from(data_local_dir().unwrap());
+        path.push("time-tracker");
+        path.push("logs");
+        Self {
+            data_file_path: path,
+        }
+    }
+}
 pub struct Args {
     pub mode: String,
 }
@@ -30,8 +42,10 @@ impl Args {
     }
 }
 
-fn open_file(path: &str) -> File {
-    let path = Path::new(&path);
+fn open_file(config: Config) -> File {
+    let path = Path::new(&config.data_file_path);
+
+    // TODO: remove repetition
     if path.exists() {
         OpenOptions::new()
             .read(true)
@@ -39,6 +53,7 @@ fn open_file(path: &str) -> File {
             .open(&path)
             .expect("Could not open file!")
     } else {
+        create_dir(path.parent().unwrap()).expect("Couldn't create directory");
         OpenOptions::new()
             .create(true)
             .read(true)
@@ -54,13 +69,13 @@ pub fn write(mut file: &File, mode: &str) {
         .expect("Could not write to file");
 }
 
-pub fn log(args: Args) -> Result<(), &'static str> {
+pub fn log(args: Args, config: Config) -> Result<(), &'static str> {
     if !["start", "end"].contains(&&*args.mode) {
         return Err("Invalid mode! Please provide one of the following: `start` or `end`");
     }
 
     let mode = args.mode;
-    let file = open_file("hello.txt");
+    let file = open_file(config);
 
     write(&file, &mode);
     if mode == "end" {
@@ -111,7 +126,7 @@ pub fn get_current_time() -> String {
 
 fn format_duration(duration: Duration) -> String {
     let seconds = duration.num_seconds() % 60;
-    let minutes = duration.num_minutes();
+    let minutes = duration.num_minutes() % 60;
     let hours = duration.num_hours();
     format!("{}h {}m {}s", hours, minutes, seconds)
 }
