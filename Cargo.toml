@@ -8,6 +8,7 @@ homepage = "https://github.com/ThejasKiranPS/time-tracker"
 repository = "https://github.com/ThejasKiranPS/time-tracker"
 keywords = ["cli", "time", "tracker"]
 categories = ["command-line-utilities"]
+license-file = "LICENSE"
 
 [[bin]]
 name = "tt"
